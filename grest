@@ -29,7 +29,7 @@ if ARGV.include? '--stdin'
   from_stdin = ARGV.delete('--stdin')
 end
 
-command = "curl -s -G --data-urlencode 'script=%s' http://#{ARGV[0]}/tp/gremlin/execute"
+command = "curl -v -s -G --data-urlencode 'script=%s' http://#{ARGV[0]}/tp/gremlin/execute"
 
 loop do
   print ENV['REPL_PROMPT'] || "gremlin [#{ARGV[0]}]> "
@@ -40,7 +40,7 @@ loop do
     exit
   end
     
-  run = "echo \"%s\" | #{command}" % [ line, nil ]
+  run = "#{command} %s" % [ line, nil ]
   
   system run
   print "\n"
