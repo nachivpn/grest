@@ -1,0 +1,48 @@
+#!/usr/bin/env ruby 
+
+completion_dir = ENV['REPL_COMPLETION_DIR'] || "~/.repl_grem"
+if File.exists?(cdir = File.expand_path(completion_dir))
+  script = ARGV.detect { |a| a !~ /^-/ }
+  if script
+    cfile = Dir[cdir + '/' + File.basename(script)].first
+    cfile = nil if cfile && !File.exists?(cfile)
+  end
+end
+
+history_dir = ENV['REPL_HISTORY_DIR'] || "~/"
+if File.exists?(hdir = File.expand_path(history_dir))
+  if script = ARGV.detect { |a| a !~ /^-/ }
+    script = File.basename(script)
+    hfile = "#{hdir}/.#{script}_history"
+  end
+end
+
+if !ENV['__REPL_WRAPPED'] && system("which rlwrap > /dev/null 2> /dev/null")
+  ENV['__REPL_WRAPPED'] = '0'
+  rlargs = " -n"
+  rlargs << " -f #{cfile}" if cfile
+  rlargs << " -H #{hfile}" if hfile
+  exec "rlwrap #{rlargs} #$0 #{ARGV.join(' ')}"
+end
+
+if ARGV.include? '--stdin'
+  from_stdin = ARGV.delete('--stdin')
+end
+
+command = "curl -s -G --data-urlencode 'script=%s' http://#{ARGV[0]}/tp/gremlin/execute"
+
+loop do
+  print ENV['REPL_PROMPT'] || "gremlin [#{ARGV[0]}]> "
+
+  begin
+    line = $stdin.gets.chomp
+  rescue NoMethodError, Interrupt
+    exit
+  end
+    
+  run = "echo \"%s\" | #{command}" % [ line, nil ]
+  
+  system run
+  print "\n"
+  warn "Use Ctrl-D (i.e. EOF) to exit" if line =~ /^(exit|quit)$/
+end
