@@ -25,10 +25,6 @@ if !ENV['__REPL_WRAPPED'] && system("which rlwrap > /dev/null 2> /dev/null")
   exec "rlwrap #{rlargs} #$0 #{ARGV.join(' ')}"
 end
 
-if ARGV.include? '--stdin'
-  from_stdin = ARGV.delete('--stdin')
-end
-
 command = "curl -s -G --data-urlencode 'script=%s' http://#{ARGV[0]}/tp/gremlin/execute | python -mjson.tool"
 
 loop do
@@ -40,9 +36,8 @@ loop do
     exit
   end
     
-  run = "#{command} %s" % [ line, nil ]
+  system "#{command} %s" % [ line, nil ]
   
-  system run
   print "\n"
   warn "Use Ctrl-D (i.e. EOF) to exit" if line =~ /^(exit|quit)$/
 end
